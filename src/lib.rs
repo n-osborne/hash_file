@@ -4,6 +4,7 @@ use std::env;
 use ring::digest::{Context, Digest, SHA256};
 use std::io::{ BufReader, Read };
 use std::fs::{ File, ReadDir, DirEntry, read_dir };
+use std::path::PathBuf;
 
 pub fn sha(file : File) -> Result<Digest, &'static str> {
     let mut reader = BufReader::new(file);
@@ -18,8 +19,8 @@ pub fn sha(file : File) -> Result<Digest, &'static str> {
     Ok(ctx.finish())
 }
 
-pub fn sha_aux(entry : DirEntry) -> Result<Digest, &'static str> {
-    let file = File::open(&entry.path()).expect("Could not open the file");
+pub fn sha_aux(entry : &DirEntry) -> Result<Digest, &'static str> {
+    let file = File::open(entry.path()).expect("Could not open the file");
     sha(file)
     
 }
@@ -40,20 +41,21 @@ pub fn get_args() -> Args {
     }
 }
 
-pub fn check(args : Args) -> bool {
+pub fn check(args : Args) -> (bool, PathBuf) {
     let sha_file = sha(args.f1).expect("Could not hash the file");
-    let mut res = false;
+    let (mut b, mut pb) = (false, PathBuf::new());
     for entry in args.rd {
         if let Ok(entry) = entry {
             if let Ok(metadata) = entry.metadata() {
                 if metadata.is_file() {
-                    if sha_file.as_ref() == sha_aux(entry).unwrap().as_ref() {
-                        res = true;
+                    if sha_file.as_ref() == sha_aux(&entry).unwrap().as_ref() {
+                        pb = entry.path();
+                        b = true;
                         break;
                     }
                 }
             }
         }
     }
-    res
+    (b, pb)
 }

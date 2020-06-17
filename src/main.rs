@@ -2,8 +2,10 @@ use hash_file::*;
 
 fn main() {
 
-    if check(get_args()) {
-        println!("file already present in directory");
+    let (b, pb) = check(get_args());
+    
+    if  b {
+        println!("file already present in directory: {:?}", pb);
     } else {
         println!("file not present in the directory");
     }
