@@ -31,17 +31,17 @@ pub struct Args {
     pub rd  : ReadDir,
 }
     
-pub fn get_args() -> Args {
+pub fn get_args() -> Result<Args, &'static str> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        panic!("Please provide a file name and a directory path")
+        Err("Please provide a file name and a directory path")
     } else {
-        Args { f1 : File::open(&args[1]).expect("Could not open file"),
-               rd : read_dir(&args[2]).expect("could not open directory"), }
+        Ok(Args { f1 : File::open(&args[1]).expect("Could not open file"),
+               rd : read_dir(&args[2]).expect("could not open directory"), })
     }
 }
 
-pub fn check(args : Args) -> (bool, PathBuf) {
+pub fn check(args : Args) -> Result<(bool, PathBuf), &'static str> {
     let sha_file = sha(args.f1).expect("Could not hash the file");
     let (mut b, mut pb) = (false, PathBuf::new());
     for entry in args.rd {
@@ -57,5 +57,5 @@ pub fn check(args : Args) -> (bool, PathBuf) {
             }
         }
     }
-    (b, pb)
+    Ok((b, pb))
 }
